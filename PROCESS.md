@@ -1,6 +1,28 @@
 # Process log
 
-Key decisions, problems and how they were solved, phase by phase. Written as the project was built, for the final presentation.
+Key decisions, problems and how they were solved, phase by phase. Written as the project was built, for the final presentation. The README describes what the blog does; this file describes how it got there.
+
+## At a glance
+
+**Phases and commits:** setup → layout and seed content → database → reading posts from the database → login → writing posts → comments → search and filter → external API → AI summaries → theme → docs → deploy. Each phase is one commit, or two when something had to be fixed, and each push deployed automatically to Vercel.
+
+**The decisions I'd defend in the presentation**
+1. **No framework, no build step.** Every line can be explained, and the site loads quickly.
+2. **Sessions in the database, not in memory.** Serverless functions don't keep memory between requests. The cookie holds a random token, and the database stores only its hash.
+3. **The server checks everything.** The login check for writing posts is in the API, all input is validated on the server, and the database has its own `CHECK` constraints. Hiding the form in the browser is only a convenience.
+4. **`textContent`, never `innerHTML`.** Tested with `<script>` and `<img onerror>` in titles and comments: they show up as plain text.
+5. **The post is saved before the AI is asked.** A broken or slow AI can never cost me a post.
+6. **Deploy early.** The live URL existed after phase 1, so problems showed up on the real site long before the deadline.
+
+**The problems that taught me the most**
+- Neon's CLI wrapped the connection string in quotes. That was harmless locally, but it would have broken Vercel, and I caught it by checking the copied value without printing it (phase 4).
+- The Art Institute of Chicago's firewall blocked visitors arriving from the blog. A single "ü" in a header also caused a 403. I ended up switching to the Cleveland Museum of Art (phase 9).
+- OpenRouter's website was down for maintenance exactly when the key was needed, so the AI code was built and tested without it (phase 10).
+- `vercel link` silently added `.env*` to `.gitignore`, which would also have hidden `.env.example` from Git (phase 4).
+
+**AI models**
+- **For the summaries:** OpenRouter with `anthropic/claude-haiku-5.5` by default. The comparison with other models is in phase 10.
+- **For building the site:** Claude Code (Claude Opus 5.5) as a pair programmer. It's credited as co-author in the commits.
 
 ## Phase 0: Planning (1 Nov 2026)
 
@@ -284,3 +306,9 @@ Key decisions, problems and how they were solved, phase by phase. Written as the
 - Clicking it saved `light` and turned the background `rgb(244, 241, 234)`. Going to a post page kept it light.
 - Switching back to dark saved `dark`. The Kindred work box, the comment form and the login page all read well in dark.
 - No console errors, no sideways scrolling at 373 px.
+
+## Phase 12: Documentation
+
+- **README.md:** what the blog is, a feature table mapped to the assignment's eight tasks, the tech stack, the project structure, how to run it locally, how to set up Neon, OpenRouter and Vercel (placeholders only), every environment variable, the database schema, the API endpoints, the security measures and what was intentionally left out.
+- **docs/architecture.md:** the data flow between the browser, the Vercel functions, Neon, OpenRouter and the Cleveland Museum of Art. There's a plain-text diagram that reads anywhere, a Mermaid diagram that GitHub draws, a "who knows which secret" table, and step-by-step diagrams for reading a post, logging in, publishing with an AI summary and commenting.
+- **PROCESS.md:** an "At a glance" section at the top, as a starting point for the presentation.
