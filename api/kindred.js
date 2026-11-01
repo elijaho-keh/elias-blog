@@ -1,5 +1,5 @@
-// GET /api/kindred?q=neon → { artwork: {…} } or { artwork: null }
-// Asks the Art Institute of Chicago on the visitor's behalf. Vercel's CDN
+// GET /api/kindred?q=eyes → { artwork: {…} } or { artwork: null }
+// Asks the Cleveland Museum of Art on the visitor's behalf. Vercel's CDN
 // keeps each answer for a day, so the museum gets about one request per
 // keyword per day, however many people read the post.
 import { allowMethods } from '../lib/http.js';
@@ -22,6 +22,6 @@ export default async function handler(req, res) {
     console.error('Kindred work:', error.message);
     // Don't cache failures, so the next visitor gets a fresh try
     res.setHeader('Cache-Control', 'no-store');
-    res.status(502).json({ error: 'The Art Institute of Chicago could not be reached.' });
+    res.status(502).json({ error: 'The Cleveland Museum of Art could not be reached.' });
   }
 }

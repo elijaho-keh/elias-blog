@@ -1,5 +1,5 @@
-// The "Kindred work" box on a post page: an artwork from the Art Institute
-// of Chicago that matches the post's keyword. The search itself happens on
+// The "Kindred work" box on a post page: an artwork from the Cleveland
+// Museum of Art that matches the post's keyword. The search itself happens on
 // our server (api/kindred.js); this file only draws the result.
 import { getKindredWork } from './api.js';
 import { el } from './lib.js';
@@ -10,7 +10,7 @@ function renderLoading(body, keyword) {
       el('div', { class: 'kindred__placeholder', 'aria-hidden': 'true' }),
       el('p', {
         class: 'kindred__status',
-        text: `Looking for a work that matches “${keyword}” at the Art Institute of Chicago…`,
+        text: `Looking for a work that matches “${keyword}” at the Cleveland Museum of Art…`,
       }),
     ]),
   );
@@ -36,7 +36,7 @@ function renderArtwork(body, artwork, keyword) {
           href: artwork.url,
           target: '_blank',
           rel: 'noopener',
-          text: 'See it at the Art Institute of Chicago ↗',
+          text: 'See it at the Cleveland Museum of Art ↗',
         }),
       ]),
     ]),
@@ -67,13 +67,13 @@ export async function initKindred(keyword) {
     if (artwork) {
       renderArtwork(body, artwork, keyword);
     } else {
-      renderMessage(body, `No artwork at the Art Institute of Chicago matched “${keyword}” this time.`);
+      renderMessage(body, `No artwork at the Cleveland Museum of Art matched “${keyword}” this time.`);
     }
   } catch (error) {
     console.warn('Kindred work:', error.message);
     renderMessage(
       body,
-      'The Art Institute of Chicago couldn’t be reached right now.',
+      'The Cleveland Museum of Art couldn’t be reached right now.',
       () => initKindred(keyword),
     );
   } finally {

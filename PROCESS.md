@@ -198,42 +198,49 @@ Key decisions, problems and how they were solved, phase by phase. Written as the
 - Opening `?q=memory&category=AI` restored the search and button and showed 2 posts. `?category=Nonsense` fell back to All.
 - No sideways scrolling at 373 px. On desktop the buttons sit on the left and the search on the right.
 
-## Phase 9: Kindred work (Art Institute of Chicago API)
+## Phase 9: Kindred work (external API)
+
+**What it does**
+- Each post page shows a "Kindred work": an artwork that matches the post's keyword, with the image, title, artist, date and a link to the artwork's page at the museum.
+- It ended up using the **Cleveland Museum of Art's Open Access API** (`openaccess-api.clevelandart.org`, no key needed). The brief named the Art Institute of Chicago. Why that changed is explained under "Problems" below.
 
 **How it works** (`lib/kindred.js`, `api/kindred.js`, `public/js/kindred.js`)
-- Each post page shows an artwork from the Art Institute of Chicago's public API (`api.artic.edu`, no key needed) that matches the post's keyword: the image, title, artist, date and a link to the artwork's page on artic.edu.
-- The page asks our own `GET /api/kindred?q=keyword`, and the serverless function asks the museum. It sends the `AIC-User-Agent` header the museum asks developers to use, and only requests the fields the box needs (`fields=id,title,artist_title,…`). The function returns a small, ready-made card (title, artist, date, image link, alt text, artwork link) instead of the museum's full response.
+- The page asks our own `GET /api/kindred?q=keyword`, and the serverless function asks the museum. The function returns a small, ready-made card (title, artist, date, image link, alt text, artwork link) instead of the museum's full response.
+- Only works with an image and a **CC0** licence are requested (`has_image=1&cc0=1`). The museum has released those images for anyone to use, so showing them on the blog is allowed.
+- Artist names are cleaned up: "Maurice Denis (French, 1870–1943)" becomes "Maurice Denis". Works with no known artist show their culture instead, for example "Southern Germany, 15th century".
 - Vercel's CDN keeps each answer for a day (`Cache-Control: s-maxage=86400`), so the museum gets about one request per keyword per day, however many people read the post. Failures aren't cached (502 + `no-store`), so the next visitor gets a fresh try.
-- The first version called the museum straight from the visitor's browser. See "Problems" below for why that changed.
-- **Relevance:** the API never returns an empty list. Even for a nonsense word like "zzqxjkvw" it returns the whole collection (133,169 works) with relevance scores around 0.00002, while real matches score 40–2,000. So `pickArtwork()` only accepts results with a score of at least 1 and an image. Otherwise the box says no artwork matched.
 - **States:**
   - Loading: a pulsing placeholder and "Looking for a work that matches …". The pulse stops if the visitor has asked for reduced motion.
   - Found: the artwork card.
   - Not found: a short message.
-  - Error or timeout: "couldn't be reached right now" with a "Try again" button. The server stops waiting for the museum after 8 seconds (`AbortSignal.timeout`).
+  - Error or timeout: "couldn't be reached right now" with a "Try again" button. The server stops waiting after 8 seconds (`AbortSignal.timeout`).
 - If the image itself fails to load, the card shows the text only, instead of a broken image icon.
-- The box sits between the story and the comments.
+
+**Problems: why the Art Institute of Chicago didn't work**
+1. **Blocked in the browser.** The first version fetched `api.artic.edu` straight from the page. The API itself allows that (CORS `*`), but in my Chrome the box said "couldn't be reached". The museum sits behind Cloudflare's firewall. Typing their API link or image link into the address bar worked, but requests made from the blog page were refused. The firewall also blocks the automated test browser used during development completely.
+2. **Moved to the server, then one letter broke it.** I moved the request into our own serverless function (`/api/kindred`). The museum asks developers to identify their app with an `AIC-User-Agent` header, so the function sent one. It got 403. The cause was the "ü" in "Grünewald": HTTP headers must be plain ASCII, and the firewall rejected the header as "malformed data". I tested the same request from the terminal with and without the ü: 403 with it, 200 without. Writing "Grunewald" fixed it, and the server got its data.
+3. **Visitors still blocked.** The artwork image and the "See it at the Art Institute" link go from the visitor's browser straight to artic.edu, and the museum refused those too. That happened in Chrome on Wi-Fi and on my phone on mobile data, with "Sorry, you have been blocked". So the box showed text but no image, and the link led to a block page.
+4. **Decision.** Getting around a museum's deliberate protection, for example by hiding where visitors come from or by pretending to be a normal browser, isn't acceptable. I switched to the Cleveland Museum of Art's open API, which I first tested from the live site: both the search and the image loaded. It also needs no key, and its images are CC0.
+5. **Three keywords had to change**, because the matching modern works in Cleveland's collection aren't CC0:
+   - Amygdala: `neon` → `eyes` gives Odilon Redon, *Closed Eyes* (1890). A face with closed eyes suits a film about memory.
+   - Ackja: `astronaut` → `comet` gives Albrecht Dürer, *Melencolia I* (1514). Melancholy under a comet suits 612 days in space.
+   - AI World Building: `Martin Parr` → `seaside` gives James Tissot, *Seaside (July: Specimen of a Portrait)* (1878). A fashionably dressed woman by the sea is close to the Martin Parr photo the project rebuilt.
+
+   I changed them in `data/posts.json` and in the database with one parameterised `UPDATE` per post, in a single transaction. That way the seed script didn't need to run again, which would have logged me out.
 
 **Verified**
-- All 8 seed keywords find a match in 0.2–0.4 seconds, for example:
-  - "Martin Parr": *Fashion Shoot for Amica Magazine, New York*, Martin Parr, 1999
-  - "neon": *Human Nature/Life Death*, Bruce Nauman, 1983
-  - "couple": *Couple*, Alberto Giacometti, 1926
-  - "astronaut": *Starry Night and the Astronauts*, Alma Thomas, 1972
-- A nonsense keyword gives "no match". `pickArtwork()` skips results without an image and results with very low scores.
-- In the browser: loading state (placeholder, `aria-busy="true"`), then the card with title, artist, date and a link that opens artic.edu in a new tab.
+- `/api/kindred` locally, for every post:
 
-**Problems**
-- **Blocked in the browser.** The first version fetched the museum's API straight from the page. In my own Chrome the box said "couldn't be reached". Yet the same API link and image link opened fine when typed into the address bar. The museum sits behind Cloudflare's firewall, which treated the page's background cross-site request differently from a normal visit. It also blocks the automated test browser used during development completely. Fix: the request now goes through our own serverless function (`/api/kindred`). The page only talks to its own server, the museum gets an identified request, and repeat visits come from Vercel's cache.
-- **One letter broke it.** After the move, the function got 403 from the museum. The cause was the "ü" in "Grünewald" in the identifying `AIC-User-Agent` header. HTTP headers must be plain ASCII, and the firewall rejects a header with other characters as "malformed data". Writing the name as "Grunewald" in that header fixed it. Testing the same request with and without the header, from the terminal, showed the difference: with the ü it was 403, without it 200.
-- I didn't try to get past the museum's bot protection, for example by pretending to be a normal browser. The fix uses the museum's API the way it asks developers to.
+  | Post | Keyword | Artwork |
+  |---|---|---|
+  | AI World Building | seaside | James Tissot, *Seaside* (1878) |
+  | Röktanke | man smoking | David Teniers, *Peasants Smoking in an Inn* (c. 1640) |
+  | Made by hand | expressionist portrait | Paula Modersohn-Becker, *Seated Female Nude (Self-Portrait?)* (c. 1899) |
+  | The False Keeper | memory | Marguerite Zorach, *The Family (In Memory of a Summer…)* (1917) |
+  | Amygdala | eyes | Odilon Redon, *Closed Eyes* (1890) |
+  | Flora | pianist | Maurice Denis, *Eva Meurier in a Green Dress* (1891) |
+  | Ackja | comet | Albrecht Dürer, *Melencolia I* (1514) |
+  | Terapisamtalet | couple | *A Bridal Couple*, Southern Germany (c. 1470) |
 
-**Verified after the fix**
-- Locally, `/api/kindred` returns:
-  - "neon": *Human Nature/Life Death*, Bruce Nauman (1983)
-  - "Martin Parr": *Fashion Shoot for Amica Magazine, New York* (1999)
-  - "pianist": *Nikolai Orloff-Pianist*, Johan Hagemeyer (1928)
-  - "couple": *Couple*, Alberto Giacometti (1926)
-  - "zzqxjkvw": `null` (the "no match" message)
-- Wrong method 405, too short a keyword 400. Successful answers carry the one-day cache header.
-- The Ackja page calls `/api/kindred?q=astronaut` and shows *Starry Night and the Astronauts*, Alma Thomas (1972). There are no console errors.
+- A nonsense word gives `null` and the "no match" message.
+- In the browser, the Amygdala page shows *Closed Eyes* with its image (693×893), title, artist, date, the link to clevelandart.org and the credit line.
