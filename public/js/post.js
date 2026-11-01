@@ -1,6 +1,7 @@
 // The post page: reads ?slug= from the URL and renders that post.
 import { getPost } from './api.js';
 import { el, formatDate, readingTime, toParagraphs } from './lib.js';
+import { initSession } from './session.js';
 
 const container = document.querySelector('#post');
 const status = document.querySelector('#post-status');
@@ -84,4 +85,5 @@ async function init() {
   }
 }
 
+initSession();
 init();

@@ -1,6 +1,7 @@
 // The home page: loads all posts and renders the story list.
 import { getPosts } from './api.js';
 import { el, excerpt, formatDate, postUrl } from './lib.js';
+import { initSession } from './session.js';
 
 const list = document.querySelector('#story-list');
 const status = document.querySelector('#list-status');
@@ -56,4 +57,5 @@ async function init() {
   }
 }
 
+initSession();
 init();

@@ -100,3 +100,29 @@ Key decisions, problems and how they were solved, phase by phase. Written as the
 **Problems**
 - `vercel link` added `.env*` to `.gitignore`. That's good for secrets, but it would also have hidden `.env.example` from Git. I rewrote `.gitignore` to ignore every `.env` file except `.env.example`, and checked each case with `git check-ignore`.
 - The live site needs `DATABASE_URL` in Vercel's environment variables, otherwise `/api/posts` fails. It has to be added before this phase is pushed. The admin username and password are not needed on Vercel.
+- Vercel's newer dashboard has no "Environment Variables" item in Settings. Variables live inside each environment: Settings → Environments → Production → Add.
+- `neon deploy` wrote the connection strings into `.env` wrapped in quotes. Node strips the quotes, so everything worked locally, but pasted into Vercel the quotes would have become part of the value and broken the connection. Caught this by checking the copied value (only yes/no checks, never printing it) and re-copied it without quotes.
+
+## Phase 5: Login and logout
+
+**How it works**
+- `POST /api/login` checks the username and password with bcrypt. On success it creates a random 32-byte token, stores only its SHA-256 hash in `sessions` with an expiry 7 days ahead, and sends the token in a cookie.
+- The cookie is `HttpOnly` (page JavaScript can't read it, so a script injected into the page couldn't steal it), `Secure` (HTTPS only; left out on localhost, which is plain HTTP), `SameSite=Strict` (never sent along with requests that start on another site) and `Path=/`.
+- `GET /api/me` looks the hashed token up and only accepts a session that hasn't expired. `POST /api/logout` deletes the session row and clears the cookie.
+- `lib/auth.js` has a `requireUser()` helper that answers 401 when nobody is logged in. Phase 6 uses it to protect writing posts on the server.
+- The header shows "Signed in as … / Log out" when you're logged in. The footer has a small "Author login" link, since there's no public sign-up.
+
+**Security details**
+- The error message is the same for a wrong username and a wrong password. When the username doesn't exist, the password is still compared against a dummy bcrypt hash, so the response time doesn't reveal which usernames exist.
+- The login API only accepts JSON (`415` otherwise). An ordinary HTML form on another website can't send JSON, which adds a second layer of protection against cross-site requests on top of `SameSite=Strict`.
+- Logout is a POST, so a link or image on another site can't log you out.
+- After logging in, `?next=` can only send you to a page on this site, never to another website.
+- Expired sessions are cleaned up at every login.
+
+**Verified locally** (with a temporary test account, deleted afterwards)
+- Wrong method 405, form data instead of JSON 415, missing password 400, unknown username 401, wrong password 401. The last two return the same message.
+- Correct password: 200 with a cookie flagged `HttpOnly; SameSite=Strict; Max-Age=604800`. On the live domain the same code adds `Secure`.
+- The database stores the SHA-256 hash of the token, never the token itself. The session expires in 7 days. A made-up cookie gives `user: null`.
+- After logout, the old cookie no longer works and the session row is gone.
+- In the browser: a wrong password shows "Wrong username or password.", clears the password field and puts the cursor back in it. The right password leads to the home page with "Log out" in the header and the footer login link hidden. `document.cookie` can't see the session cookie. Clicking "Log out" returns to the logged-out state.
+- I tested with a separate temporary account instead of my real admin password, then deleted it. Afterwards: 1 user, 0 sessions.

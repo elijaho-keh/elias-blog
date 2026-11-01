@@ -5,7 +5,8 @@
    3. Header and footer
    4. Home: masthead and story list
    5. Post page
-   6. States and utilities
+   6. Forms
+   7. States and utilities
    ========================================================================== */
 
 /* 1. Design tokens --------------------------------------------------------
@@ -162,6 +163,31 @@ p {
 
 .site-nav a {
   text-decoration: none;
+}
+
+.auth-nav {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.auth-nav:empty {
+  display: none;
+}
+
+.auth-nav__who {
+  color: var(--muted);
+}
+
+@media (max-width: 599px) {
+  .auth-nav__who {
+    display: none;
+  }
+}
+
+.site-footer__links {
+  display: flex;
+  gap: 1.25rem;
 }
 
 .site-footer {
@@ -433,7 +459,107 @@ p {
   border-top: 1px solid var(--rule);
 }
 
-/* 6. States and utilities ------------------------------------------------- */
+/* 6. Forms ---------------------------------------------------------------- */
+.form-page {
+  max-width: 30rem;
+  margin: 0 auto;
+  padding: 0 var(--gutter) clamp(3rem, 8vw, 6rem);
+}
+
+.form-page__title {
+  margin: clamp(1.5rem, 5vw, 3rem) 0 0.75rem;
+  font-size: clamp(3rem, 10vw, 5.5rem);
+}
+
+.form-page__intro {
+  margin-bottom: 2rem;
+  font-family: var(--font-ui);
+  font-size: 0.9375rem;
+  color: var(--muted);
+}
+
+.form {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.field label {
+  font-family: var(--font-ui);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+/* 1rem (16px) text stops iPhones from zooming in on the field */
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  padding: 0.75rem 0.85rem;
+  font-family: var(--font-ui);
+  font-size: 1rem;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--muted);
+  border-radius: 2px;
+}
+
+.field input:focus-visible,
+.field select:focus-visible,
+.field textarea:focus-visible {
+  border-color: var(--ink);
+  outline-offset: 1px;
+}
+
+.form-error {
+  min-height: 1.25rem;
+  font-family: var(--font-ui);
+  font-size: 0.875rem;
+  color: var(--accent);
+}
+
+.button {
+  justify-self: start;
+  padding: 0.8rem 1.5rem;
+  font-family: var(--font-ui);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--paper);
+  background: var(--ink);
+  border: 0;
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.button:hover {
+  background: var(--accent);
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.link-button {
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+
+.link-button:hover {
+  color: var(--accent);
+}
+
+/* 7. States and utilities ------------------------------------------------- */
 .status {
   padding: 3rem 0;
   font-family: var(--font-ui);
