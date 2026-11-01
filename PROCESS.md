@@ -46,3 +46,31 @@ Key decisions, problems and how they were solved, phase by phase. Written as the
 **Problems**
 - Python's built-in web server wasn't allowed to read a folder on the Desktop (a macOS privacy setting), so the local preview uses a tiny Node server instead. It's only for previewing and isn't part of the project.
 - On desktop, every other story puts its image on the right. At first those images ended up in the narrow column. Fixed by flipping the column widths on even rows.
+
+## Phase 3: Database
+
+**Setup with the Neon CLI**
+- Neon's onboarding gives you a prompt for a coding agent. It used the Neon CLI: `neon init` linked this folder to my Neon project and created `neon.ts`, and `neon deploy` wrote the connection strings straight into `.env`. The database password never had to be copied by hand or shown on screen.
+- `neon.ts` is Neon's config file. It keeps the production branch as it is, and any extra development branch I create deletes itself after 7 days.
+- The project runs PostgreSQL 18 in AWS Frankfurt (eu-central-1), the same region as the Vercel functions.
+- `neon init` also installed Neon's plugin and skills for coding agents (Claude Code, Codex, VS Code) on my computer. That's outside this project and isn't committed.
+
+**Decisions**
+- Driver: `@neondatabase/serverless`, as the brief specifies. Neon's own agent skill suggests `pg` with Vercel's Fluid compute for Vercel, but the serverless driver's HTTP mode means there's no connection to open, reuse or close: each function call sends its query over HTTPS. That's easier to explain and plenty fast for a blog.
+- Neon gives two connection strings. The pooled one (`DATABASE_URL`) is for the app. The direct one (`DATABASE_URL_UNPOOLED`) is for schema changes, as Neon recommends.
+- The schema lives in code (`scripts/schema.sql`) and is applied with `npm run db:schema`, in one transaction. It's safe to run again.
+- The database guards its own data: a post's category must be Film, AI or Art, and comment names and bodies have length limits. Even if the API had a bug, Postgres would refuse bad rows.
+- `npm run db:seed` creates the admin account (bcrypt, cost 12) and loads the eight posts. Running it again updates rows instead of duplicating them, keeps any AI summaries, and logs out old sessions in case the password changed.
+- Every query goes through `query(text, params)` in `lib/db.js`, with `$1, $2` placeholders.
+
+**Verified**
+- `npm run db:check`: connected to `neondb` on PostgreSQL 18.6. Rows: 1 user, 8 posts (AI 3, Art 1, Film 4), 0 comments, 0 sessions. Running the seed twice still gives 8 posts.
+- The password in `.env` matches the stored bcrypt hash, and the stored value is a hash, not the password.
+- An SQL injection string (`flora' OR '1'='1`) sent as a parameter matched 0 rows.
+- Inserting a post with the category "Music" was rejected by the database's check constraint.
+- There is no `npm run build`: the project has no build step on purpose.
+
+**Problems**
+- `npm i -g neon` failed with a permissions error (global npm installs need admin rights on this Mac). Running it with `npx neon@latest` instead worked.
+- The first `neon init` ran before I had signed in, so it only wrote the link file. After `neon login` in the browser, `neon deploy` connected and pulled the variables.
+- My admin password contains special characters. I checked that Node reads it from `.env` exactly as typed before hashing it.

@@ -14,3 +14,4 @@ node_modules/
 
 # Local assistant/preview settings
 .claude/
+.neon
