@@ -18,7 +18,7 @@ In film, *dailies* are the raw footage you watch at the end of each shooting day
 | 2 | **Login and logout** | One author account, created by `npm run db:seed` from `ADMIN_USERNAME` / `ADMIN_PASSWORD`. No public sign-up. Passwords are hashed with bcrypt. Sessions live in the `sessions` table: a random token sits in an `HttpOnly`, `Secure`, `SameSite=Strict` cookie, and the database stores only its SHA-256 hash. |
 | 3 | **Add posts** | A "New story" form (title, category, cover image, image description, keyword, text). **The server checks the session** in `POST /api/posts` and answers 401 without a valid login, whatever the browser shows. Every field is validated on the server. |
 | 4 | **Comments** | Anyone can comment with a name and a comment, no login needed. Comments are stored in Neon and shown under the post. A hidden honeypot field stops simple bots. All visitor text is shown with `textContent`, never `innerHTML`. |
-| 5 | **AI summary** | When a post is created, the server asks OpenRouter (model from `OPENROUTER_MODEL`) for a two-sentence summary and stores it in `posts.summary`. The post is saved first, so it's kept even if the AI fails. `npm run ai:summaries` fills in the seed posts. |
+| 5 | **AI summary** | When a post is created, the server asks an AI model for a two-sentence summary and stores it in `posts.summary`. The post is saved first, so it's kept even if the AI fails. `npm run ai:summaries` fills in the seed posts. *The brief named OpenRouter. Its website was down for maintenance when the key was needed, so the summaries use **Google Gemini's free tier**. OpenRouter still works: set `OPENROUTER_API_KEY` instead.* |
 | 6 | **Search and filter** | A live search over titles, text and summaries, plus All / Film / AI / Art buttons with live counts. Written in vanilla JavaScript: a `state` object, a `CATEGORIES` array, and small functions and conditions (`matchesQuery`, `matchesCategory`, `countByCategory`). The filter is saved in the URL. |
 | 7 | **External API** | A "Kindred work" box on every post page: an artwork from the **Cleveland Museum of Art Open Access API** that matches the post's keyword, with image, title, artist, date and a link. It has loading, not-found and error states. *The brief named the Art Institute of Chicago. Its firewall blocked visitors arriving from the blog, so I switched museums. See [PROCESS.md](PROCESS.md#phase-9-kindred-work-external-api).* |
 | 8 | **Theme switcher** | Light and dark themes built on CSS variables. The site follows the system setting until you click ☾ / ☀, and the choice is saved in `localStorage` with no flash on page load. |
@@ -33,7 +33,7 @@ In film, *dailies* are the raw footage you watch at the end of each shooting day
 | Backend | Vercel serverless functions in `/api` (Node.js 24), running in Frankfurt (`fra1`) |
 | Database | PostgreSQL on Neon (free plan, AWS Frankfurt) with `@neondatabase/serverless` over HTTP |
 | Auth | `bcryptjs` for password hashing, sessions in the `sessions` table |
-| AI | OpenRouter, default model `anthropic/claude-haiku-5.5` |
+| AI | Google Gemini API, free tier (`gemini-3.5-flash-lite`). OpenRouter is supported as an alternative. |
 | External API | Cleveland Museum of Art Open Access API (no key) |
 | Hosting | Vercel, deployed from this public GitHub repo on every push |
 | Fonts | Instrument Serif, Source Serif 4, Inter (Google Fonts) |
@@ -61,7 +61,7 @@ lib/               shared server code
   db.js              query() and transaction() with $1, $2 parameters
   auth.js            sessions, cookies, requireUser()
   posts.js, comments.js   queries and validation
-  ai.js              OpenRouter summaries
+  ai.js              AI summaries (Gemini or OpenRouter)
   kindred.js         Cleveland Museum of Art search
   http.js            405, 415 and safe 500 responses
 scripts/           run on your own computer
@@ -74,7 +74,7 @@ PROCESS.md         decisions, problems and solutions, phase by phase
 
 ## Run it locally
 
-You need **Node.js 24**, a **Neon** database, a **Vercel** account and (for summaries) an **OpenRouter** key.
+You need **Node.js 24**, a **Neon** database, a **Vercel** account and (for summaries) a free **Gemini** key or an **OpenRouter** key.
 
 ```bash
 git clone https://github.com/elijaho-keh/elias-blog.git
@@ -108,8 +108,10 @@ npm start              # http://localhost:3000
 |---|---|---|
 | `DATABASE_URL` | app and scripts (pooled connection) | `postgresql://USER:PASSWORD@HOST-pooler/neondb?sslmode=require` |
 | `DATABASE_URL_UNPOOLED` | `db:schema` (direct connection, optional) | `postgresql://USER:PASSWORD@HOST/neondb?sslmode=require` |
-| `OPENROUTER_API_KEY` | app and `ai:summaries` | `sk-or-v1-…` |
-| `OPENROUTER_MODEL` | app and `ai:summaries` | `anthropic/claude-haiku-5.5` |
+| `GEMINI_API_KEY` | app and `ai:summaries` (used if set) | `AIza…` |
+| `GEMINI_MODEL` | app and `ai:summaries` | `gemini-3.5-flash-lite` |
+| `OPENROUTER_API_KEY` | alternative to Gemini | `sk-or-v1-…` |
+| `OPENROUTER_MODEL` | alternative to Gemini | `anthropic/claude-haiku-5.5` |
 | `ADMIN_USERNAME` | `db:seed` only, never on Vercel | your username |
 | `ADMIN_PASSWORD` | `db:seed` only, never on Vercel | 12+ characters |
 
@@ -126,17 +128,19 @@ npm start              # http://localhost:3000
    If they end up wrapped in quotes, remove the quotes before pasting the value into Vercel.
 3. Run `npm run db:schema` and `npm run db:seed`.
 
-### OpenRouter (AI summaries)
-1. Create an account at [openrouter.ai](https://openrouter.ai) and add a small amount of credit.
-2. **Settings → API Keys → Create Key.** Set a credit limit as a safety net.
-3. Put the key in `.env` as `OPENROUTER_API_KEY`. Keep `OPENROUTER_MODEL=anthropic/claude-haiku-5.5`, or choose another model from OpenRouter's list.
+### Gemini (AI summaries, free)
+1. Sign in at [aistudio.google.com](https://aistudio.google.com) with a Google account.
+2. **Get API key → Create API key.**
+3. Put it in `.env` as `GEMINI_API_KEY`, with `GEMINI_MODEL=gemini-3.5-flash-lite`. The free tier allows 15 requests per minute, plenty for a blog.
+
+*Alternative:* an [OpenRouter](https://openrouter.ai) key in `OPENROUTER_API_KEY` (pay per use, many models). It's used when no Gemini key is set.
 
 ### Vercel (hosting)
 1. **Add New → Project → Import** the GitHub repo. Framework preset: **Other**. `vercel.json` already sets `public/` as the output folder and Frankfurt as the region.
 2. Go to **Settings → Environments → Production → Add** and add:
    - `DATABASE_URL` as Secret
-   - `OPENROUTER_API_KEY` as Secret
-   - `OPENROUTER_MODEL` as Config
+   - `GEMINI_API_KEY` as Secret
+   - `GEMINI_MODEL` as Config
 
    The admin username and password are **not** needed on Vercel.
 3. Every push to `main` deploys automatically.

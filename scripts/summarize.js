@@ -3,13 +3,14 @@
 //      npm run ai:summaries -- --all        redo every post
 //      npm run ai:summaries -- --dry-run    show summaries without saving
 // Try another model for one run:
-//      OPENROUTER_MODEL=google/gemini-2.5-flash-lite npm run ai:summaries -- --all --dry-run
-import { DEFAULT_MODEL, summarize } from '../lib/ai.js';
+//      GEMINI_MODEL=gemini-3.5-flash npm run ai:summaries -- --all --dry-run
+import { aiSettings, summarize } from '../lib/ai.js';
 import { query } from '../lib/db.js';
 import { updateSummary } from '../lib/posts.js';
 
-if (!process.env.OPENROUTER_API_KEY) {
-  console.error('Add OPENROUTER_API_KEY to .env first.');
+const settings = aiSettings();
+if (!settings.apiKey) {
+  console.error('Add GEMINI_API_KEY (or OPENROUTER_API_KEY) to .env first.');
   process.exit(1);
 }
 
@@ -21,7 +22,7 @@ const posts = await query(
    ${redoAll ? '' : 'WHERE summary IS NULL'}
    ORDER BY published_at`,
 );
-console.log(`Model: ${process.env.OPENROUTER_MODEL || DEFAULT_MODEL}`);
+console.log(`AI: ${settings.name}, model ${settings.model}`);
 console.log(`Posts to summarize: ${posts.length}${dryRun ? ' (dry run, nothing is saved)' : ''}\n`);
 
 let failed = 0;

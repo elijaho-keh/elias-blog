@@ -1,6 +1,6 @@
 # Architecture
 
-How data flows between the visitor's browser, the Vercel functions, the Neon database, OpenRouter and the Cleveland Museum of Art.
+How data flows between the visitor's browser, the Vercel functions, the Neon database, the Gemini AI and the Cleveland Museum of Art.
 
 ## The big picture
 
@@ -10,7 +10,7 @@ How data flows between the visitor's browser, the Vercel functions, the Neon dat
 │           │──────▶│                                                                           │
 │  Browser  │       │  /api functions ──── SQL ($1, $2) over HTTPS ───▶  Neon Postgres          │
 │           │ JSON  │   posts, post,                                      (AWS Frankfurt)       │
-│ HTML + JS │◀─────▶│   comments,     ──── post text ─────────────────▶  OpenRouter → AI model  │
+│ HTML + JS │◀─────▶│   comments,     ──── post text ─────────────────▶  Gemini (Google AI)     │
 │  modules  │cookie │   login, logout,                                                          │
 │           │       │   me, kindred   ──── keyword ───────────────────▶  Cleveland Museum of Art│
 └───────────┘       │        ▲                                            Open Access API       │
@@ -30,7 +30,7 @@ flowchart LR
   end
 
   N[("Neon Postgres<br/>AWS Frankfurt")]
-  O["OpenRouter<br/>AI model"]
+  O["Gemini API<br/>(Google AI)"]
   M["Cleveland Museum of Art<br/>Open Access API"]
   MI["Museum image CDN"]
 
@@ -48,7 +48,7 @@ flowchart LR
 | Part | Holds | Never sees |
 |---|---|---|
 | Browser | the pages and an `HttpOnly` session cookie that its JavaScript can't read | database address, API keys |
-| Vercel functions | `DATABASE_URL`, `OPENROUTER_API_KEY`, `OPENROUTER_MODEL` (environment variables) | the admin password |
+| Vercel functions | `DATABASE_URL`, `GEMINI_API_KEY`, `GEMINI_MODEL` (environment variables) | the admin password |
 | Neon | users (bcrypt hashes), sessions (SHA-256 hashes of tokens), posts, comments | plain passwords or plain session tokens |
 | My computer | `.env` with everything, including `ADMIN_USERNAME` / `ADMIN_PASSWORD` for the seed script | – |
 
@@ -112,7 +112,7 @@ sequenceDiagram
   participant B as Browser (new.html)
   participant A as POST /api/posts
   participant N as Neon
-  participant O as OpenRouter
+  participant O as Gemini
 
   B->>A: { title, category, cover_url, cover_alt, keyword, body } + cookie
   A->>N: requireUser(): look up the hashed session token

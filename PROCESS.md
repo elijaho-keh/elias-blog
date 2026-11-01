@@ -17,11 +17,11 @@ Key decisions, problems and how they were solved, phase by phase. Written as the
 **The problems that taught me the most**
 - Neon's CLI wrapped the connection string in quotes. That was harmless locally, but it would have broken Vercel, and I caught it by checking the copied value without printing it (phase 4).
 - The Art Institute of Chicago's firewall blocked visitors arriving from the blog. A single "ü" in a header also caused a 403. I ended up switching to the Cleveland Museum of Art (phase 9).
-- OpenRouter's website was down for maintenance exactly when the key was needed, so the AI code was built and tested without it (phase 10).
+- OpenRouter's website was down for maintenance exactly when the key was needed. The AI code was built and tested without a key, then I switched to Google Gemini's free tier and kept OpenRouter as an option (phase 10).
 - `vercel link` silently added `.env*` to `.gitignore`, which would also have hidden `.env.example` from Git (phase 4).
 
 **AI models**
-- **For the summaries:** OpenRouter with `anthropic/claude-haiku-5.5` by default. The comparison with other models is in phase 10.
+- **For the summaries:** Google Gemini `gemini-3.5-flash-lite` (free tier). The comparison with the other models I tried is in phase 10.
 - **For building the site:** Claude Code (Claude Opus 5.5) as a pair programmer. It's credited as co-author in the commits.
 
 ## Phase 0: Planning (1 Nov 2026)
@@ -312,3 +312,25 @@ Key decisions, problems and how they were solved, phase by phase. Written as the
 - **README.md:** what the blog is, a feature table mapped to the assignment's eight tasks, the tech stack, the project structure, how to run it locally, how to set up Neon, OpenRouter and Vercel (placeholders only), every environment variable, the database schema, the API endpoints, the security measures and what was intentionally left out.
 - **docs/architecture.md:** the data flow between the browser, the Vercel functions, Neon, OpenRouter and the Cleveland Museum of Art. There's a plain-text diagram that reads anywhere, a Mermaid diagram that GitHub draws, a "who knows which secret" table, and step-by-step diagrams for reading a post, logging in, publishing with an AI summary and commenting.
 - **PROCESS.md:** an "At a glance" section at the top, as a starting point for the presentation.
+
+### Phase 10, part 2: switching to Gemini
+
+**Why:** openrouter.ai stayed in maintenance, and the alternative was to pay for credit. Google's **Gemini API** has a free tier, and getting a key took about two minutes with a Google account. `lib/ai.js` now supports both providers with the same request format (OpenAI-style "chat completions"): Gemini is used when `GEMINI_API_KEY` is set, otherwise OpenRouter. Nothing else in the app changed.
+
+**AI models tried**
+
+| Model | Result |
+|---|---|
+| `gemini-2.5-flash-lite` | 404: "no longer available to new users". Google pointed to the newer model. |
+| `gemini-3.5-flash` | Came back empty. It's a "thinking" model, and the 160-token limit was spent on thinking before it wrote anything. |
+| **`gemini-3.5-flash-lite`** | **Chosen.** Two clean sentences in 0.6–1.3 seconds per post. |
+| `anthropic/claude-haiku-5.5` via OpenRouter | Planned first choice. Not tested, because OpenRouter's site was down. The code is still there. |
+
+**What I learned from the output**
+- The first run broke the prompt's own rule twice: summaries started with "The text introduces…" and "This post showcases…". I made the rule stricter ("start directly with the subject; never write 'this post', 'the text'…") and checked every summary.
+- The model sometimes adds details that aren't in the text. For Ackja it wrote "astronauts", and for a test post about filming rehearsals it invented a "choir". For the seed posts, I re-ran a summary until it no longer contained a word that wasn't in the post. That's why the post page labels summaries "AI summary": they're helpful, not authoritative.
+- The free tier allows **15 requests per minute**. My test runs hit that limit once ("429 quota exceeded"). The script logged the failure and carried on, and a second run a minute later filled in the missing summary.
+
+**Verified**
+- All 8 seed posts have a summary. Publishing through `POST /api/posts` returned 201 in 1.3 seconds with a summary saved in the database (test post and test account deleted afterwards).
+- The post page shows the summary under the title, labelled "AI summary".
