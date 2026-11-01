@@ -171,3 +171,29 @@ Key decisions, problems and how they were solved, phase by phase. Written as the
 - **XSS test:** a comment with the name `<img src=x onerror=alert(1)>` and the text `<script>alert("comment")</script>` shows as plain characters. 0 injected elements on the page, nothing ran.
 - In the browser at phone width (373 px): an empty submit showed "Add your name." and "Write a comment." without sending a request. Posting worked: "Comments (3)", a thank-you message, the comment box cleared. After a reload the comment was still there, and there was no sideways scrolling.
 - Clean-up: 3 test comments deleted, leaving 0 comments, 8 posts and 1 user.
+
+## Phase 8: Search and category filter
+
+**How it works** (all in `public/js/home.js`, vanilla JavaScript)
+- The page loads every post once. After that, searching and filtering happen in the browser without any new requests.
+- **Object:** a single `state` object holds everything the page needs to draw itself: `{ posts, query, category }`. Every change goes through `update(changes)`, which updates the state and redraws, so the page can't get out of sync.
+- **Arrays:** `CATEGORIES = ['All', 'Film', 'AI', 'Art']`. The buttons are built from that array with `map()`, and the visible posts come from `posts.filter()`.
+- **Functions and conditions:**
+  - `matchesCategory()`: "All" lets everything through, otherwise the category must match.
+  - `matchesQuery()`: every word in the search must appear in the title, text or summary (`every()`), so "piano stage" only finds posts with both words.
+  - `normalize()`: removes accents and capital letters, so "roktanke" finds "Röktanke".
+  - `countByCategory()`: counts the matches in each category, so the buttons show live numbers such as "Film 4".
+- The searchable text for each post is prepared once at load, not on every keystroke.
+- The search and the category are saved in the address bar (`?q=memory&category=AI`) with `history.replaceState`, so a filtered view survives a reload and can be shared as a link. Unknown categories in the address fall back to "All".
+- When nothing matches, a message names the search and category, with a "Show all stories" button that resets both and puts the cursor back in the search box.
+- Accessibility: the buttons use `aria-pressed`, the search box has a label for screen readers, and the "4 of 8 stories" counter is announced when it changes.
+- Story titles in the list changed from `h2` to `h3`, because they sit under the "Stories" `h2`.
+
+**Verified in the browser**
+- On load: "All 8, Film 4, AI 3, Art 1" and "8 stories".
+- Film: 4 Film posts, "4 of 8 stories", address `?category=Film`.
+- Film + "roktanke": "No stories match “roktanke” in Film." The buttons showed "All 2, AI 1, Art 1", because "Made by hand" mentions Röktanke too.
+- "Show all stories": back to 8, search box empty and focused, address cleared.
+- "piano stage" gave only "Flora: a piano trio on an empty stage".
+- Opening `?q=memory&category=AI` restored the search and button and showed 2 posts. `?category=Nonsense` fell back to All.
+- No sideways scrolling at 373 px. On desktop the buttons sit on the left and the search on the right.

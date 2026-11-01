@@ -34,9 +34,23 @@
     <section class="stories" aria-labelledby="stories-heading">
       <div class="stories__bar">
         <h2 class="label" id="stories-heading">Stories</h2>
-        <p class="label" id="story-count"></p>
+        <p class="label" id="story-count" role="status"></p>
       </div>
+
+      <div class="toolbar">
+        <div class="filters" id="filters" role="group" aria-label="Filter by category"></div>
+        <div class="search">
+          <label class="visually-hidden" for="search">Search stories</label>
+          <input class="search__input" id="search" type="search" placeholder="Search stories"
+                 autocomplete="off" spellcheck="false">
+        </div>
+      </div>
+
       <p class="status" id="list-status" role="status">Loading stories…</p>
+      <div class="empty-state" id="empty-state" hidden>
+        <p class="empty-state__text" id="empty-text"></p>
+        <button class="button" type="button" id="clear-filters">Show all stories</button>
+      </div>
       <ol class="story-list" id="story-list"></ol>
     </section>
   </main>
