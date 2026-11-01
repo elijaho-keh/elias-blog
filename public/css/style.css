@@ -537,6 +537,94 @@ p {
   background: #000;
 }
 
+/* Kindred work */
+.kindred__card {
+  display: grid;
+  gap: 1.25rem;
+  padding: clamp(1rem, 3vw, 1.75rem);
+  background: var(--paper-deep);
+}
+
+.kindred__media img {
+  width: auto;
+  max-height: 60vh;
+}
+
+.kindred__placeholder {
+  height: 14rem;
+  background: var(--rule);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kindred__placeholder {
+    animation: none;
+  }
+}
+
+.kindred__title {
+  margin: 0.6rem 0 0.5rem;
+  font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+}
+
+.kindred__artist {
+  font-weight: 600;
+}
+
+.kindred__date {
+  color: var(--ink-soft);
+}
+
+.kindred__link {
+  display: inline-block;
+  margin-top: 1rem;
+  font-family: var(--font-ui);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.kindred__status,
+.kindred__credit {
+  font-family: var(--font-ui);
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.kindred__message {
+  display: grid;
+  justify-items: start;
+  gap: 0.5rem;
+  padding: 1.25rem 0;
+}
+
+.kindred__message .link-button {
+  font-family: var(--font-ui);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.kindred__credit {
+  margin-top: 0.75rem;
+  font-size: 0.8125rem;
+}
+
+@media (min-width: 700px) {
+  .kindred__card {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center;
+  }
+
+  .kindred__placeholder {
+    height: 18rem;
+  }
+}
+
 /* Comments */
 .comments__status {
   font-family: var(--font-ui);

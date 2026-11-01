@@ -1,6 +1,7 @@
 // The post page: reads ?slug= from the URL and renders that post.
 import { getPost } from './api.js';
 import { initComments } from './comments.js';
+import { initKindred } from './kindred.js';
 import { el, formatDate, readingTime, toParagraphs } from './lib.js';
 import { initSession } from './session.js';
 
@@ -78,6 +79,7 @@ async function init() {
     }
     status.textContent = '';
     renderPost(post);
+    initKindred(post.keyword);
     initComments(post.slug);
   } catch (error) {
     console.error(error);

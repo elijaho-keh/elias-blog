@@ -197,3 +197,30 @@ Key decisions, problems and how they were solved, phase by phase. Written as the
 - "piano stage" gave only "Flora: a piano trio on an empty stage".
 - Opening `?q=memory&category=AI` restored the search and button and showed 2 posts. `?category=Nonsense` fell back to All.
 - No sideways scrolling at 373 px. On desktop the buttons sit on the left and the search on the right.
+
+## Phase 9: Kindred work (Art Institute of Chicago API)
+
+**How it works** (`public/js/kindred.js`)
+- Each post page asks the Art Institute of Chicago's public API (`api.artic.edu`, no key needed) for artworks that match the post's keyword, and shows the first relevant one that has an image: the image, title, artist, date and a link to the artwork's page on artic.edu.
+- The request goes straight from the visitor's browser. The API allows that (CORS `Access-Control-Allow-Origin: *`), so the blog needs no extra serverless function for it. Only the fields the box needs are requested (`fields=id,title,artist_title,…`).
+- **Relevance:** the API never returns an empty list. Even for a nonsense word like "zzqxjkvw" it returns the whole collection (133,169 works) with relevance scores around 0.00002, while real matches score 40–2,000. So `pickArtwork()` only accepts results with a score of at least 1 and an image. Otherwise the box says no artwork matched.
+- **States:**
+  - Loading: a pulsing placeholder and "Looking for a work that matches …". The pulse stops if the visitor has asked for reduced motion.
+  - Found: the artwork card.
+  - Not found: a short message.
+  - Error or timeout: "couldn't be reached right now" with a "Try again" button. An `AbortController` stops waiting after 8 seconds.
+- If the image itself fails to load, the card shows the text only, instead of a broken image icon.
+- The box sits between the story and the comments.
+
+**Verified**
+- All 8 seed keywords find a match in 0.2–0.4 seconds, for example:
+  - "Martin Parr": *Fashion Shoot for Amica Magazine, New York*, Martin Parr, 1999
+  - "neon": *Human Nature/Life Death*, Bruce Nauman, 1983
+  - "couple": *Couple*, Alberto Giacometti, 1926
+  - "astronaut": *Starry Night and the Astronauts*, Alma Thomas, 1972
+- A nonsense keyword gives "no match". `pickArtwork()` skips results without an image and results with very low scores.
+- In the browser: loading state (placeholder, `aria-busy="true"`), then the card with title, artist, date and a link that opens artic.edu in a new tab.
+
+**Problem**
+- The Art Institute's website is behind Cloudflare, which blocks the automated test browser used during development ("Sorry, you have been blocked"). It also blocks image requests from the terminal, even for public-domain works. Normal browsers aren't blocked. So the data part was tested from the terminal against the real API, and the box's layout was tested in the browser by replaying a real API response. The image step fell back to the text-only card, exactly as designed. The final check is opening a post in a normal browser.
+- I chose not to send the optional `AIC-User-Agent` header the museum asks for. A custom header forces an extra preflight request before every search, and their API tells browsers not to cache that preflight.
