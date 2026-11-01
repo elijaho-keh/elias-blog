@@ -22,6 +22,7 @@ function renderLoggedIn(user) {
 
   slot.replaceChildren(
     el('span', { class: 'auth-nav__who', text: `Signed in as ${user.username}` }),
+    el('a', { href: '/new.html', text: 'Write' }),
     button,
   );
 }

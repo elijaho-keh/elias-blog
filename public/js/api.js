@@ -3,7 +3,8 @@
 // only this file has to change.
 
 // Sends a request to our own API and returns the JSON answer. Throws if the
-// server answers with an error, with the HTTP status on error.status.
+// server answers with an error, with the HTTP status on error.status and
+// any per-field messages on error.fields.
 async function request(url, options = {}) {
   const response = await fetch(url, {
     ...options,
@@ -14,6 +15,7 @@ async function request(url, options = {}) {
   if (!response.ok) {
     const error = new Error(data.error || `Request failed (${response.status})`);
     error.status = response.status;
+    error.fields = data.fields || {};
     throw error;
   }
   return data;
@@ -44,6 +46,12 @@ export async function getPost(slug) {
     if (error.status === 404) return null;
     throw error;
   }
+}
+
+// Saves a new post (logged in only) and returns it
+export async function createPost(fields) {
+  const data = await postJson('/api/posts', fields);
+  return data.post;
 }
 
 // --- Login ---------------------------------------------------------------

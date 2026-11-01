@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>New story — Dailies</title>
+  <meta name="robots" content="noindex">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Inter:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+  <link rel="stylesheet" href="/css/style.css">
+  <script type="module" src="/js/new.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <a class="brand" href="/">Dailies</a>
+    <nav class="site-nav" aria-label="Main">
+      <span class="auth-nav" id="auth-nav"></span>
+      <a href="https://eliasdykert.se">Portfolio <span aria-hidden="true">↗</span></a>
+    </nav>
+  </header>
+
+  <main id="main" class="form-page form-page--wide">
+    <a class="back" href="/">← All stories</a>
+    <h1 class="form-page__title">New story</h1>
+    <p class="status" id="write-status" role="status">Checking your login…</p>
+
+    <div id="login-needed" hidden>
+      <p class="form-page__intro">You need to be logged in to write a story.</p>
+      <a class="button" href="/login.html?next=/new.html">Log in</a>
+    </div>
+
+    <form class="form" id="post-form" novalidate hidden>
+      <div class="field">
+        <label for="title">Title</label>
+        <input id="title" name="title" type="text" maxlength="120" aria-describedby="title-error">
+        <p class="field-error" id="title-error"></p>
+      </div>
+
+      <div class="field">
+        <label for="category">Category</label>
+        <select id="category" name="category" aria-describedby="category-error">
+          <option value="">Choose…</option>
+          <option value="Film">Film</option>
+          <option value="AI">AI</option>
+          <option value="Art">Art</option>
+        </select>
+        <p class="field-error" id="category-error"></p>
+      </div>
+
+      <div class="field">
+        <label for="cover_url">Cover image</label>
+        <input id="cover_url" name="cover_url" type="text" list="site-images" maxlength="500"
+               placeholder="/img/art-dusk.jpg or https://…" autocomplete="off"
+               aria-describedby="cover_url-hint cover_url-error">
+        <p class="field-hint" id="cover_url-hint">Pick one of the site's images from the list, or paste a link to an image.</p>
+        <p class="field-error" id="cover_url-error"></p>
+        <img class="cover-preview" id="cover-preview" alt="" hidden>
+        <datalist id="site-images">
+          <option value="/img/art-bakport.jpg"></option>
+          <option value="/img/art-canvas.jpg"></option>
+          <option value="/img/art-cat.jpg"></option>
+          <option value="/img/art-church-view.jpg"></option>
+          <option value="/img/art-cigarette.jpg"></option>
+          <option value="/img/art-dusk.jpg"></option>
+          <option value="/img/art-green-eyes.jpg"></option>
+          <option value="/img/art-line.jpg"></option>
+          <option value="/img/art-orange-house.jpg"></option>
+          <option value="/img/art-pastel-face.jpg"></option>
+          <option value="/img/art-yellow-vest.jpg"></option>
+          <option value="/img/keeper-1.jpg"></option>
+          <option value="/img/keeper-2.jpg"></option>
+          <option value="/img/keeper-3.jpg"></option>
+          <option value="/img/keeper-4.jpg"></option>
+          <option value="/img/portrait.jpg"></option>
+          <option value="/img/poster-ackja.jpg"></option>
+          <option value="/img/poster-amygdala.jpg"></option>
+          <option value="/img/poster-flora.jpg"></option>
+          <option value="/img/poster-fotografiska.jpg"></option>
+          <option value="/img/poster-terapisamtalet.jpg"></option>
+          <option value="/img/roktanke.jpg"></option>
+        </datalist>
+      </div>
+
+      <div class="field">
+        <label for="cover_alt">Image description <span class="optional">(optional)</span></label>
+        <input id="cover_alt" name="cover_alt" type="text" maxlength="300"
+               aria-describedby="cover_alt-hint cover_alt-error">
+        <p class="field-hint" id="cover_alt-hint">Describe the image for people who can't see it.</p>
+        <p class="field-error" id="cover_alt-error"></p>
+      </div>
+
+      <div class="field">
+        <label for="keyword">Keyword</label>
+        <input id="keyword" name="keyword" type="text" maxlength="60"
+               aria-describedby="keyword-hint keyword-error">
+        <p class="field-hint" id="keyword-hint">One or two words, used to find a related artwork from the Art Institute of Chicago.</p>
+        <p class="field-error" id="keyword-error"></p>
+      </div>
+
+      <div class="field">
+        <label for="body">Text</label>
+        <textarea id="body" name="body" rows="18" maxlength="20000"
+                  aria-describedby="body-hint body-count body-error"></textarea>
+        <p class="field-hint" id="body-hint">Plain text. Leave an empty line between paragraphs. Start the last paragraph with “Credits:” to show it as credits.</p>
+        <p class="field-hint" id="body-count" aria-live="polite">0 words</p>
+        <p class="field-error" id="body-error"></p>
+      </div>
+
+      <p class="form-error" id="form-error" role="alert"></p>
+      <button class="button" type="submit">Publish</button>
+    </form>
+  </main>
+
+  <footer class="site-footer">
+    <p>© 2026 Elias Grünewald Dykert, Stockholm</p>
+    <p class="site-footer__links">
+      <a href="https://eliasdykert.se">eliasdykert.se</a>
+      <a href="/login.html" id="footer-login">Author login</a>
+    </p>
+  </footer>
+</body>
+</html>

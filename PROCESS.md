@@ -126,3 +126,29 @@ Key decisions, problems and how they were solved, phase by phase. Written as the
 - After logout, the old cookie no longer works and the session row is gone.
 - In the browser: a wrong password shows "Wrong username or password.", clears the password field and puts the cursor back in it. The right password leads to the home page with "Log out" in the header and the footer login link hidden. `document.cookie` can't see the session cookie. Clicking "Log out" returns to the logged-out state.
 - I tested with a separate temporary account instead of my real admin password, then deleted it. Afterwards: 1 user, 0 sessions.
+
+## Phase 6: Writing posts
+
+**How it works**
+- `POST /api/posts` creates a post in three steps:
+  1. `requireUser()` checks the session cookie against the database and answers 401 if nobody is logged in.
+  2. `validatePostInput()` checks every field.
+  3. `createPost()` saves it.
+- The login check happens on the server, so hiding the form in the browser is only a convenience. Calling the API directly without a valid session still gets 401.
+- Validation lives on the server, which is the one place that can't be skipped:
+  - The title is 3–120 characters, the category must be Film, AI or Art, the text at least 100 characters, and the keyword 2–60 characters.
+  - The cover image must be a link that starts with `https://`, `http://` or `/img/`. That blocks values like `javascript:…`.
+  - Each problem comes back with a message for that field, and the form shows it under the right field.
+- Slugs come from the title: "Röktanke: a prompt!" becomes `roktanke-a-prompt`. If a slug is already taken, the server tries `-2`, `-3` and so on, using `ON CONFLICT DO NOTHING`.
+- The "New story" page has a live cover preview, a list of the site's own images to pick from, and a live word count. Hints ask for an image description (alt text) and explain that the keyword is used to find a related artwork.
+- When logged in, the header shows "Write". If the session runs out while writing, the text stays in the form and a link opens the login in a new tab.
+
+**Verified locally** (temporary test account and test posts, all deleted afterwards)
+- POST without a cookie: 401. With a made-up cookie: 401.
+- Logged in: form data instead of JSON 415. An empty form returns 400 with five field messages. A `javascript:` cover returns 400. Category "Music" returns 400.
+- A valid post returns 201. Posting the same title again gave the slug `…-2`.
+- **XSS test:** a post titled `<script>alert("xss")</script> Test story`, with `<b>` and `<img onerror=…>` in the text and in the alt text, shows all of it as plain characters on the page. No script ran, and there are 0 `<script>`, `<b>` or `<img>` elements inside the article. This is what rendering with `textContent` instead of `innerHTML` buys.
+- In the browser: logged out, `/new.html` shows "You need to be logged in" instead of the form. Logging in through `/login.html?next=/new.html` leads straight back to the form. An empty submit marks five fields in red and moves the cursor to the title. A filled-in form shows the cover preview and word count, publishes, opens the new post (three paragraphs, credits, alt text), and the post appears first on the home page.
+- Clean-up: 3 test posts and the test user removed, leaving 1 user, 8 posts and 0 sessions.
+
+**Note:** the console shows a 401, a 400 and a 404 during testing. They come from the deliberate wrong password, the deliberately empty form and the deliberately wrong post address. The browser logs every failed request, even when the page handles it.
