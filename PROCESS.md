@@ -340,3 +340,33 @@ Key decisions, problems and how they were solved, phase by phase. Written as the
 - **Problem:** my first live test post had a body that was one 412-character "word" with no spaces. Nothing in the CSS allowed a word to break, so the post page became 4,586 px wide on a 373 px phone screen, and the home page 3,891 px, through the excerpt. The same would happen with a long pasted link.
 - **Fix:** one line on `body`: `overflow-wrap: anywhere`. A word only breaks when it can't fit on its own line, so normal text is unaffected. Both pages measured 373 px wide afterwards.
 - That post also got no AI summary. The text was gibberish, so the model's answer failed the "too short" check, and the post was saved without one, as designed. I deleted the test post afterwards.
+
+## Phase 13: Final check on the live site
+
+Tested on https://elias-blog-xi.vercel.app after the last deploy.
+
+**API and files**
+- Pages, CSS, JS and images: 200. Private files (`/.env`, `/package.json`, `/data/posts.json`): 404, because only `public/` is served.
+- `GET /api/posts` returns 8 posts (Film 4, AI 3, Art 1), all with an AI summary. `/api/post?slug=flora` 200, unknown slug 404. `/api/comments`, `/api/me` (`user: null`) and `/api/kindred?q=eyes` (*Closed Eyes*, Odilon Redon) all 200.
+- Security: `POST /api/posts` without a login 401, with a fake cookie 401. Wrong login 401, with no cookie set. Form data instead of JSON 415. `DELETE` 405.
+
+**Every feature in the browser, at phone width (375 px)**
+1. **Listing:** 8 stories with cover, title, date, category and AI summary.
+2. **Post page:** title, "AI summary", 10 paragraphs, video, back links at the top and bottom. An unknown slug shows "That story could not be found."
+3. **Login:** `new.html` asks a logged-out visitor to log in and hides the form. My own login and publishing were tested on the live site earlier.
+4. **Comments:** I posted a real comment, it showed straight away with "Thanks!" and "Comments (1)", and then I deleted it.
+5. **AI summaries:** present on all posts. Publishing created one live earlier, and the "Doktor Glas" test also showed that bad input saves without one.
+6. **Search and filter:** "memory" gave 3 of 8. Film + "memory" gave 1. Nonsense showed the "No stories match" message, and "Show all stories" reset it to 8.
+7. **External API:** the Kindred work box on Flora shows Maurice Denis, *Eva Meurier in a Green Dress*, with its image (625×900).
+8. **Theme:** the button switched the system theme to light and saved it.
+
+**Phone width:** every page measured 375 px wide on a 375 px screen, with no sideways scrolling.
+
+**Console:** home, post (scrolled through Kindred work and comments), login and new story pages logged **no messages at all**.
+
+**Secrets in Git** (all 16 commits, all branches)
+- No `.env` file was ever committed. Only `.env.example`, with placeholders, is in Git.
+- The real values of `DATABASE_URL`, `DATABASE_URL_UNPOOLED`, `GEMINI_API_KEY` and `ADMIN_PASSWORD`, and the database password on its own, appear nowhere in the history. I checked by comparing against `.env` without printing anything.
+- No secret-shaped strings (`AIza…`, `sk-or-v1-…`, `npg_…`, Neon URLs with a password) anywhere in the history.
+
+**Database after the check:** 8 posts, 0 comments, 1 user. Every test post, comment and account created during the project has been removed.
