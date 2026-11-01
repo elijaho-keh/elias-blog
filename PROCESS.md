@@ -266,3 +266,21 @@ Key decisions, problems and how they were solved, phase by phase. Written as the
 - `npm run ai:summaries` stops with "Add OPENROUTER_API_KEY to .env first." (exit code 1).
 - `summarize()` without a key throws "OPENROUTER_API_KEY is not set". With a made-up key, OpenRouter answers 401, and `trySummarize()` logs it and returns `null` in about 0.2 seconds.
 - Creating a post through the API without a key: 201 Created, saved in the database with `summary: null`. The test post and test account were deleted afterwards (8 posts, 1 user).
+
+## Phase 11: Light and dark theme
+
+**How it works**
+- Phase 2 already defined every colour as a CSS variable (`--paper`, `--ink`, `--accent` and so on), so the dark theme only redefines seven values. No other CSS changed.
+- With no saved choice, the site follows the visitor's system setting (`prefers-color-scheme`).
+- The ☾ / ☀ button in the header switches theme, sets `data-theme` on `<html>`, and saves the choice in `localStorage`. CSS gives `data-theme` priority over the system setting.
+- **No flash:** a few lines of inline script in each page's `<head>` apply the saved theme before the page is drawn, so a dark-theme visitor never sees a white flash on load.
+- `localStorage` can be blocked, for example in some private windows. Every read and write is wrapped in `try/catch`, so the button still works for the current page.
+- The dark colours were checked for contrast: grey text on the dark background is about 6:1, and the red accent is lightened to `#f07a5e` so it stays readable.
+- The button has an `aria-label` ("Switch to dark theme"). On phones it shows only the icon, so the header doesn't wrap.
+- `color-scheme: dark` makes the browser's own parts, such as form fields and scrollbars, dark too.
+
+**Verified in the browser**
+- With no saved choice and the system in dark mode, the page opened dark (`rgb(20, 19, 17)`) with the button saying "Switch to light theme".
+- Clicking it saved `light` and turned the background `rgb(244, 241, 234)`. Going to a post page kept it light.
+- Switching back to dark saved `dark`. The Kindred work box, the comment form and the login page all read well in dark.
+- No console errors, no sideways scrolling at 373 px.

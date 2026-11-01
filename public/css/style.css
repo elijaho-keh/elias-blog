@@ -32,6 +32,32 @@
   color-scheme: light;
 }
 
+/* Dark theme. It follows the visitor's system setting, unless they picked
+   a theme with the button, which sets data-theme on <html>. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #141311;
+    --paper-deep: #1e1d1a;
+    --ink: #ece8df;
+    --ink-soft: #c8c3b8;
+    --muted: #9b958b;
+    --rule: #34322d;
+    --accent: #f07a5e;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --paper: #141311;
+  --paper-deep: #1e1d1a;
+  --ink: #ece8df;
+  --ink-soft: #c8c3b8;
+  --muted: #9b958b;
+  --rule: #34322d;
+  --accent: #f07a5e;
+  color-scheme: dark;
+}
+
 /* 2. Base ----------------------------------------------------------------- */
 *,
 *::before,
@@ -168,6 +194,34 @@ p {
 
 .site-nav a {
   text-decoration: none;
+}
+
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.7rem;
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.theme-toggle:hover {
+  border-color: var(--ink);
+}
+
+@media (max-width: 599px) {
+  .site-nav {
+    gap: 0.9rem;
+  }
+
+  /* Icon only on small screens; the button keeps its aria-label */
+  .theme-toggle__text {
+    display: none;
+  }
 }
 
 .auth-nav {
