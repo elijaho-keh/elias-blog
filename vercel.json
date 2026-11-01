@@ -1,5 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "regions": ["fra1"],
-  "cleanUrls": true
+  "outputDirectory": "public",
+  "regions": ["fra1"]
 }

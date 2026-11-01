@@ -3,12 +3,46 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Elias Grünewald Dykert — Blog</title>
+  <title>Dailies — Elias Grünewald Dykert</title>
+  <meta name="description" content="Behind-the-scenes notes on film, AI and art by Elias Grünewald Dykert, a filmmaker, painter and AI content engineering student in Stockholm.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Inter:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+  <link rel="stylesheet" href="/css/style.css">
+  <script type="module" src="/js/home.js"></script>
 </head>
 <body>
-  <main>
-    <h1>Elias Grünewald Dykert</h1>
-    <p>Behind-the-scenes stories from film, AI and art. Coming soon.</p>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <a class="byline-link" href="/">Elias Grünewald Dykert</a>
+    <nav class="site-nav" aria-label="Main">
+      <a href="https://eliasdykert.se">Portfolio <span aria-hidden="true">↗</span></a>
+    </nav>
+  </header>
+
+  <main id="main">
+    <header class="masthead">
+      <h1 class="wordmark">Dailies</h1>
+      <div class="masthead__text">
+        <p class="masthead__intro">Behind-the-scenes notes from my film, AI and art projects: the process, the ideas, and the parts that didn't work.</p>
+        <p class="masthead__note">Dailies: in film, the raw footage you watch at the end of each shooting day, before anything is fixed in the edit.</p>
+      </div>
+    </header>
+
+    <section class="stories" aria-labelledby="stories-heading">
+      <div class="stories__bar">
+        <h2 class="label" id="stories-heading">Stories</h2>
+        <p class="label" id="story-count"></p>
+      </div>
+      <p class="status" id="list-status" role="status">Loading stories…</p>
+      <ol class="story-list" id="story-list"></ol>
+    </section>
   </main>
+
+  <footer class="site-footer">
+    <p>© 2026 Elias Grünewald Dykert, Stockholm</p>
+    <p><a href="https://eliasdykert.se">eliasdykert.se</a></p>
+  </footer>
 </body>
 </html>
