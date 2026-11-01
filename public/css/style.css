@@ -457,6 +457,77 @@ p {
   background: #000;
 }
 
+/* Comments */
+.comments__status {
+  font-family: var(--font-ui);
+  font-size: 0.9375rem;
+  color: var(--muted);
+}
+
+.comments__status:empty {
+  display: none;
+}
+
+.comment-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.comment {
+  padding: 1.25rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.comment:first-child {
+  padding-top: 0.25rem;
+}
+
+.comment__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.75rem;
+  margin-bottom: 0.4rem;
+  font-family: var(--font-ui);
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+.comment__name {
+  font-weight: 600;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+/* Keep the visitor's line breaks, and wrap very long words */
+.comment__body {
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.comment-form {
+  margin-top: 2.5rem;
+}
+
+.comment-form__title {
+  font-size: 2rem;
+}
+
+.comment-form textarea {
+  min-height: 8rem;
+}
+
+/* The spam trap: moved off-screen instead of display: none, because some
+   bots skip fields that are hidden with CSS display */
+.trap {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
 .post__end {
   max-width: var(--measure);
   margin: clamp(3rem, 7vw, 5rem) auto 0;

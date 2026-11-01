@@ -152,3 +152,22 @@ Key decisions, problems and how they were solved, phase by phase. Written as the
 - Clean-up: 3 test posts and the test user removed, leaving 1 user, 8 posts and 0 sessions.
 
 **Note:** the console shows a 401, a 400 and a 404 during testing. They come from the deliberate wrong password, the deliberately empty form and the deliberately wrong post address. The browser logs every failed request, even when the page handles it.
+
+## Phase 7: Comments
+
+**How it works**
+- `GET /api/comments?post=slug` returns a post's comments, oldest first, so they read like a conversation. `POST /api/comments` adds one with a name and a comment. No login is needed.
+- The server checks everything again, whatever the browser did:
+  - name 1–60 characters, comment 1–2,000 characters (the database has the same limits as `CHECK` constraints)
+  - the post must exist (404 otherwise)
+  - JSON only (415 otherwise)
+- Line breaks in comments are kept with CSS `white-space: pre-line` instead of turning them into `<br>` tags, so the text can stay plain `textContent`. Windows line endings are normalised, and runs of empty lines are shortened to one.
+- **Spam trap (honeypot):** the form has a hidden "Website" field. People never see it, because it's moved off-screen and skipped by Tab and by screen readers. Bots fill in every field, so a filled-in "Website" means the comment is rejected.
+- The browser does a quick empty-field check first, so an empty form never reaches the server. The new comment appears straight away, the counter updates, and the name stays filled in for the next comment.
+
+**Verified locally** (test comments deleted afterwards)
+- Unknown post 404, wrong method 405, form data 415, empty fields 400 (two field messages), too long 400 (two field messages), honeypot filled 400, valid 201.
+- `"  First line.\r\n\r\n\r\n\r\nAfter many empty lines.  "` was saved as `First line.\n\nAfter many empty lines.`
+- **XSS test:** a comment with the name `<img src=x onerror=alert(1)>` and the text `<script>alert("comment")</script>` shows as plain characters. 0 injected elements on the page, nothing ran.
+- In the browser at phone width (373 px): an empty submit showed "Add your name." and "Write a comment." without sending a request. Posting worked: "Comments (3)", a thank-you message, the comment box cleared. After a reload the comment was still there, and there was no sideways scrolling.
+- Clean-up: 3 test comments deleted, leaving 0 comments, 8 posts and 1 user.

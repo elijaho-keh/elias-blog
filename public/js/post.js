@@ -1,10 +1,12 @@
 // The post page: reads ?slug= from the URL and renders that post.
 import { getPost } from './api.js';
+import { initComments } from './comments.js';
 import { el, formatDate, readingTime, toParagraphs } from './lib.js';
 import { initSession } from './session.js';
 
 const container = document.querySelector('#post');
 const status = document.querySelector('#post-status');
+const postEnd = document.querySelector('#post-end');
 
 function renderBody(text) {
   const paragraphs = toParagraphs(text).map((paragraph) => {
@@ -50,12 +52,9 @@ function renderPost(post) {
     el('img', { src: post.cover_url, alt: post.cover_alt || '' }),
   ]);
 
-  const end = el('nav', { class: 'post__end', 'aria-label': 'Back' }, [
-    el('a', { class: 'back', href: '/', text: '← Back to all stories' }),
-  ]);
-
-  const parts = [header, cover, renderBody(post.body), renderVideo(post), end];
+  const parts = [header, cover, renderBody(post.body), renderVideo(post)];
   container.append(...parts.filter(Boolean));
+  postEnd.hidden = false;
 }
 
 function showError(message) {
@@ -79,6 +78,7 @@ async function init() {
     }
     status.textContent = '';
     renderPost(post);
+    initComments(post.slug);
   } catch (error) {
     console.error(error);
     showError('The story could not be loaded. Please try again in a moment.');

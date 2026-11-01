@@ -54,6 +54,20 @@ export async function createPost(fields) {
   return data.post;
 }
 
+// --- Comments ------------------------------------------------------------
+
+// The comments on one post, oldest first
+export async function getComments(slug) {
+  const data = await request(`/api/comments?post=${encodeURIComponent(slug)}`);
+  return data.comments;
+}
+
+// Adds a comment and returns it as saved by the server
+export async function addComment(slug, { name, body, website }) {
+  const data = await postJson('/api/comments', { post: slug, name, body, website });
+  return data.comment;
+}
+
 // --- Login ---------------------------------------------------------------
 
 // The logged-in user ({ username }), or null
