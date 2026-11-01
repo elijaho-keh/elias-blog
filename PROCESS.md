@@ -74,3 +74,29 @@ Key decisions, problems and how they were solved, phase by phase. Written as the
 - `npm i -g neon` failed with a permissions error (global npm installs need admin rights on this Mac). Running it with `npx neon@latest` instead worked.
 - The first `neon init` ran before I had signed in, so it only wrote the link file. After `neon login` in the browser, `neon deploy` connected and pulled the variables.
 - My admin password contains special characters. I checked that Node reads it from `.env` exactly as typed before hashing it.
+
+## Phase 4: Reading posts from the database
+
+**What changed**
+- Two serverless functions:
+  - `GET /api/posts` returns every post, newest first.
+  - `GET /api/post?slug=…` returns one post.
+- Each answers with a clear status code: 200 for OK, 400 if the slug is missing, 404 for an unknown post, and 405 for a wrong method such as POST.
+- Shared server helpers:
+  - `lib/http.js`: the 405 answer, and a 500 answer that logs the real error on the server while the visitor only sees a general message, so database details never leak.
+  - `lib/posts.js`: the post queries. They list their columns instead of using `SELECT *`, so internal columns like `author_id` stay out of the API.
+- On the frontend, only `public/js/api.js` changed, exactly as planned in phase 2. The home page and post page code didn't need a single edit.
+- The seed file moved from `public/data/posts.json` to `data/posts.json`. Only the seed script reads it now, and it's no longer a public URL.
+
+**Running it locally**
+- `npm start` runs `vercel dev`, which serves the pages and the `/api` functions together on http://localhost:3000 and reads `DATABASE_URL` from `.env`.
+- This needed a one-time `vercel login` (approve a code in the browser) and `vercel link` to connect the folder to the Vercel project.
+
+**Verified locally**
+- `/api/posts` returned 8 posts in date order. `/api/post?slug=flora` returned the full post (346 words).
+- Status codes: missing slug 400, unknown slug 404, the injection string `flora' OR '1'='1` 404, POST 405, the old `/data/posts.json` 404.
+- In the browser, the home page made one request to `/api/posts` and showed all 8 stories. Clicking "Ackja: day 612" loaded `/api/post?slug=ackja` with credits, video and the back link. An unknown slug showed "That story could not be found." There were no console errors.
+
+**Problems**
+- `vercel link` added `.env*` to `.gitignore`. That's good for secrets, but it would also have hidden `.env.example` from Git. I rewrote `.gitignore` to ignore every `.env` file except `.env.example`, and checked each case with `git check-ignore`.
+- The live site needs `DATABASE_URL` in Vercel's environment variables, otherwise `/api/posts` fails. It has to be added before this phase is pushed. The admin username and password are not needed on Vercel.

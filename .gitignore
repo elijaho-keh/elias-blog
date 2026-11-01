@@ -1,17 +1,17 @@
 # Dependencies
 node_modules/
 
-# Secrets: never commit these
-.env
-.env.local
-.env.*.local
+# Secrets: never commit these. Every .env file is ignored
+# except .env.example, which only has placeholders.
+.env*
+!.env.example
 
-# Vercel CLI project link
+# Vercel CLI and Neon CLI project links
 .vercel
+.neon
 
 # macOS
 .DS_Store
 
 # Local assistant/preview settings
 .claude/
-.neon

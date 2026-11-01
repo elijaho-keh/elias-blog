@@ -35,7 +35,7 @@ console.log(`Admin account ready (user id ${admin.id}).`);
 // 2. The seed posts. On a re-run the text is updated, but an existing
 // AI summary is kept.
 const posts = JSON.parse(
-  await readFile(new URL('../public/data/posts.json', import.meta.url), 'utf8'),
+  await readFile(new URL('../data/posts.json', import.meta.url), 'utf8'),
 );
 
 await transaction(
