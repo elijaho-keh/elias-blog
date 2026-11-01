@@ -11,7 +11,8 @@
     "start": "vercel dev",
     "db:schema": "node --env-file=.env scripts/db-schema.js",
     "db:seed": "node --env-file=.env scripts/seed.js",
-    "db:check": "node --env-file=.env scripts/db-check.js"
+    "db:check": "node --env-file=.env scripts/db-check.js",
+    "ai:summaries": "node --env-file=.env scripts/summarize.js"
   },
   "dependencies": {
     "@neon/config": "^1.10.0",

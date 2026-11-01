@@ -1,9 +1,10 @@
 // GET  /api/posts → every post, newest first.
 // POST /api/posts → creates a post. Only for the logged-in author:
 //                   the server checks the session cookie itself.
+import { trySummarize } from '../lib/ai.js';
 import { requireUser } from '../lib/auth.js';
 import { allowMethods, readJsonBody, serverError } from '../lib/http.js';
-import { createPost, listPosts, validatePostInput } from '../lib/posts.js';
+import { createPost, listPosts, updateSummary, validatePostInput } from '../lib/posts.js';
 
 async function list(req, res) {
   const posts = await listPosts();
@@ -25,8 +26,17 @@ async function create(req, res) {
     return;
   }
 
-  // 3. Save it
+  // 3. Save it. This happens before the AI is asked, so the post is saved
+  //    even if the AI is slow, down or out of credit.
   const post = await createPost(values, user.id);
+
+  // 4. Ask the AI for a two-sentence summary (null if that fails)
+  const summary = await trySummarize(post.body);
+  if (summary) {
+    await updateSummary(post.id, summary);
+    post.summary = summary;
+  }
+
   res.status(201).json({ post });
 }
 

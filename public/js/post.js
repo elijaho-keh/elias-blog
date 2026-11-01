@@ -46,6 +46,13 @@ function renderPost(post) {
       el('span', { text: `${readingTime(post.body)} min read` }),
     ]),
     el('h1', { class: 'post__title', text: post.title }),
+    // The AI summary, labelled as such so readers know who wrote it
+    post.summary
+      ? el('p', { class: 'post__summary' }, [
+          el('span', { class: 'post__summary-label', text: 'AI summary' }),
+          post.summary,
+        ])
+      : null,
     el('p', { class: 'post__byline', text: 'By Elias Grünewald Dykert' }),
   ]);
 

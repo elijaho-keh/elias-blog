@@ -244,3 +244,25 @@ Key decisions, problems and how they were solved, phase by phase. Written as the
 
 - A nonsense word gives `null` and the "no match" message.
 - In the browser, the Amygdala page shows *Closed Eyes* with its image (693×893), title, artist, date, the link to clevelandart.org and the credit line.
+
+## Phase 10: AI summaries
+
+**How it works** (`lib/ai.js`)
+- When a post is created, `POST /api/posts` sends its text to **OpenRouter**, which gives one API for many AI models, and stores a two-sentence summary in `posts.summary`. The model is chosen with the `OPENROUTER_MODEL` env var.
+- **The post is saved before the AI is asked.** If the AI is slow (8-second limit), down, out of credit or the key is missing, `trySummarize()` returns `null` and the post is still saved, just without a summary. The home page then shows the first lines of the text instead.
+- The prompt asks for exactly two sentences, at most 45 words, in the present tense and a neutral voice (no "I", no "the author"), using only facts from the post. The answer is cleaned up: one line, no wrapping quotation marks, at most 400 characters.
+- On the post page, the summary sits under the title, labelled **"AI summary"**, so readers know a machine wrote it and not me.
+- `npm run ai:summaries` fills in summaries for posts that don't have one, including the eight seed posts. `-- --all` redoes every post, and `-- --dry-run` shows the results without saving, which is handy for comparing models.
+- The seed script never overwrites existing summaries.
+
+**Choosing a model** (OpenRouter's prices, 1 November 2026, per million tokens)
+- Default: `anthropic/claude-haiku-5.5` at $0.10 in and $0.50 out. One summary is about 600 tokens in and 60 out, so roughly $0.0001, and $1 covers about 10,000 summaries. It's new and good at short, careful writing.
+- Cheaper candidates to compare: `google/gemini-2.5-flash-lite` ($0.10 / $0.40) and `mistralai/mistral-small-3.2-24b-instruct` ($0.075 / $0.20).
+
+**Problem**
+- openrouter.ai's website was down for maintenance when I wanted to create the API key. So the code was written and tested first, and the key comes later. OpenRouter's API itself still answered: a made-up key got a clean "401 User not found".
+
+**Verified without a key**
+- `npm run ai:summaries` stops with "Add OPENROUTER_API_KEY to .env first." (exit code 1).
+- `summarize()` without a key throws "OPENROUTER_API_KEY is not set". With a made-up key, OpenRouter answers 401, and `trySummarize()` logs it and returns `null` in about 0.2 seconds.
+- Creating a post through the API without a key: 201 Created, saved in the database with `summary: null`. The test post and test account were deleted afterwards (8 posts, 1 user).
