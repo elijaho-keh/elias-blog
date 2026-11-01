@@ -68,6 +68,15 @@ export async function addComment(slug, { name, body, website }) {
   return data.comment;
 }
 
+// --- Kindred work ----------------------------------------------------------
+
+// An artwork from the Art Institute of Chicago matching the keyword, or null.
+// Our own server asks the museum (see api/kindred.js).
+export async function getKindredWork(keyword) {
+  const data = await request(`/api/kindred?q=${encodeURIComponent(keyword)}`);
+  return data.artwork;
+}
+
 // --- Login ---------------------------------------------------------------
 
 // The logged-in user ({ username }), or null

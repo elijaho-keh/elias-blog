@@ -200,15 +200,17 @@ Key decisions, problems and how they were solved, phase by phase. Written as the
 
 ## Phase 9: Kindred work (Art Institute of Chicago API)
 
-**How it works** (`public/js/kindred.js`)
-- Each post page asks the Art Institute of Chicago's public API (`api.artic.edu`, no key needed) for artworks that match the post's keyword, and shows the first relevant one that has an image: the image, title, artist, date and a link to the artwork's page on artic.edu.
-- The request goes straight from the visitor's browser. The API allows that (CORS `Access-Control-Allow-Origin: *`), so the blog needs no extra serverless function for it. Only the fields the box needs are requested (`fields=id,title,artist_title,…`).
+**How it works** (`lib/kindred.js`, `api/kindred.js`, `public/js/kindred.js`)
+- Each post page shows an artwork from the Art Institute of Chicago's public API (`api.artic.edu`, no key needed) that matches the post's keyword: the image, title, artist, date and a link to the artwork's page on artic.edu.
+- The page asks our own `GET /api/kindred?q=keyword`, and the serverless function asks the museum. It sends the `AIC-User-Agent` header the museum asks developers to use, and only requests the fields the box needs (`fields=id,title,artist_title,…`). The function returns a small, ready-made card (title, artist, date, image link, alt text, artwork link) instead of the museum's full response.
+- Vercel's CDN keeps each answer for a day (`Cache-Control: s-maxage=86400`), so the museum gets about one request per keyword per day, however many people read the post. Failures aren't cached (502 + `no-store`), so the next visitor gets a fresh try.
+- The first version called the museum straight from the visitor's browser. See "Problems" below for why that changed.
 - **Relevance:** the API never returns an empty list. Even for a nonsense word like "zzqxjkvw" it returns the whole collection (133,169 works) with relevance scores around 0.00002, while real matches score 40–2,000. So `pickArtwork()` only accepts results with a score of at least 1 and an image. Otherwise the box says no artwork matched.
 - **States:**
   - Loading: a pulsing placeholder and "Looking for a work that matches …". The pulse stops if the visitor has asked for reduced motion.
   - Found: the artwork card.
   - Not found: a short message.
-  - Error or timeout: "couldn't be reached right now" with a "Try again" button. An `AbortController` stops waiting after 8 seconds.
+  - Error or timeout: "couldn't be reached right now" with a "Try again" button. The server stops waiting for the museum after 8 seconds (`AbortSignal.timeout`).
 - If the image itself fails to load, the card shows the text only, instead of a broken image icon.
 - The box sits between the story and the comments.
 
@@ -221,6 +223,17 @@ Key decisions, problems and how they were solved, phase by phase. Written as the
 - A nonsense keyword gives "no match". `pickArtwork()` skips results without an image and results with very low scores.
 - In the browser: loading state (placeholder, `aria-busy="true"`), then the card with title, artist, date and a link that opens artic.edu in a new tab.
 
-**Problem**
-- The Art Institute's website is behind Cloudflare, which blocks the automated test browser used during development ("Sorry, you have been blocked"). It also blocks image requests from the terminal, even for public-domain works. Normal browsers aren't blocked. So the data part was tested from the terminal against the real API, and the box's layout was tested in the browser by replaying a real API response. The image step fell back to the text-only card, exactly as designed. The final check is opening a post in a normal browser.
-- I chose not to send the optional `AIC-User-Agent` header the museum asks for. A custom header forces an extra preflight request before every search, and their API tells browsers not to cache that preflight.
+**Problems**
+- **Blocked in the browser.** The first version fetched the museum's API straight from the page. In my own Chrome the box said "couldn't be reached". Yet the same API link and image link opened fine when typed into the address bar. The museum sits behind Cloudflare's firewall, which treated the page's background cross-site request differently from a normal visit. It also blocks the automated test browser used during development completely. Fix: the request now goes through our own serverless function (`/api/kindred`). The page only talks to its own server, the museum gets an identified request, and repeat visits come from Vercel's cache.
+- **One letter broke it.** After the move, the function got 403 from the museum. The cause was the "ü" in "Grünewald" in the identifying `AIC-User-Agent` header. HTTP headers must be plain ASCII, and the firewall rejects a header with other characters as "malformed data". Writing the name as "Grunewald" in that header fixed it. Testing the same request with and without the header, from the terminal, showed the difference: with the ü it was 403, without it 200.
+- I didn't try to get past the museum's bot protection, for example by pretending to be a normal browser. The fix uses the museum's API the way it asks developers to.
+
+**Verified after the fix**
+- Locally, `/api/kindred` returns:
+  - "neon": *Human Nature/Life Death*, Bruce Nauman (1983)
+  - "Martin Parr": *Fashion Shoot for Amica Magazine, New York* (1999)
+  - "pianist": *Nikolai Orloff-Pianist*, Johan Hagemeyer (1928)
+  - "couple": *Couple*, Alberto Giacometti (1926)
+  - "zzqxjkvw": `null` (the "no match" message)
+- Wrong method 405, too short a keyword 400. Successful answers carry the one-day cache header.
+- The Ackja page calls `/api/kindred?q=astronaut` and shows *Starry Night and the Astronauts*, Alma Thomas (1972). There are no console errors.
