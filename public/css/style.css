@@ -875,6 +875,10 @@ p {
   color: var(--muted);
 }
 
+.cover-upload {
+  margin-top: 0.25rem;
+}
+
 .cover-preview {
   max-height: 16rem;
   width: auto;

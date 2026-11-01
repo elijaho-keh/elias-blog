@@ -63,7 +63,11 @@
         <input id="cover_url" name="cover_url" type="text" list="site-images" maxlength="500"
                placeholder="/img/art-dusk.jpg or https://…" autocomplete="off"
                aria-describedby="cover_url-hint cover_url-error">
-        <p class="field-hint" id="cover_url-hint">Pick one of the site's images from the list, or paste a link to an image.</p>
+        <div class="cover-upload">
+          <button class="link-button" id="cover-upload-button" type="button">Choose an image from your computer…</button>
+          <input id="cover-file" type="file" accept="image/jpeg,image/png,image/webp" hidden>
+        </div>
+        <p class="field-hint" id="cover_url-hint">Pick one of the site's images from the list, paste a link to an image, or upload one from your computer.</p>
         <p class="field-error" id="cover_url-error"></p>
         <img class="cover-preview" id="cover-preview" alt="" hidden>
         <datalist id="site-images">

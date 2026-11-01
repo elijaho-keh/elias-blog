@@ -13,9 +13,49 @@ const formError = document.querySelector('#form-error');
 const submitButton = form.querySelector('button[type="submit"]');
 const preview = document.querySelector('#cover-preview');
 const wordCount = document.querySelector('#body-count');
+const fileInput = document.querySelector('#cover-file');
+
+// An image picked from the computer, shrunk and turned into a data URL.
+// The text field only shows its file name.
+let upload = null; // { label, dataUrl }
+
+const MAX_SIDE = 1600;
 
 function readForm() {
-  return Object.fromEntries(FIELDS.map((name) => [name, form.elements[name].value]));
+  const values = Object.fromEntries(FIELDS.map((name) => [name, form.elements[name].value]));
+  if (upload && values.cover_url === upload.label) values.cover_url = upload.dataUrl;
+  return values;
+}
+
+// Shrinks a picked image to at most 1600 px wide or tall and saves it as JPEG,
+// so a big photo from a phone becomes a few hundred kilobytes.
+async function shrinkImage(file) {
+  const bitmap = await createImageBitmap(file);
+  const scale = Math.min(1, MAX_SIDE / Math.max(bitmap.width, bitmap.height));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(bitmap.width * scale);
+  canvas.height = Math.round(bitmap.height * scale);
+  canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  bitmap.close();
+  return canvas.toDataURL('image/jpeg', 0.82);
+}
+
+async function handleFile() {
+  const file = fileInput.files[0];
+  fileInput.value = '';
+  if (!file) return;
+
+  const error = document.querySelector('#cover_url-error');
+  error.textContent = '';
+  try {
+    const dataUrl = await shrinkImage(file);
+    upload = { label: `Uploaded: ${file.name}`, dataUrl };
+    form.elements.cover_url.value = upload.label;
+    preview.src = dataUrl;
+    preview.hidden = false;
+  } catch {
+    error.textContent = 'That file could not be read as an image. Try a JPEG or PNG.';
+  }
 }
 
 // Shows the server's message under each field that needs fixing
@@ -37,6 +77,8 @@ function setBusy(isBusy) {
 // Live preview of the cover image
 function updatePreview() {
   const url = form.elements.cover_url.value.trim();
+  if (upload && url === upload.label) return;
+  upload = null;
   const looksLikeImage = url.startsWith('/img/') || /^https?:\/\/\S+$/.test(url);
   if (looksLikeImage) {
     preview.src = url;
@@ -91,6 +133,8 @@ async function init() {
   form.hidden = false;
   form.addEventListener('submit', handleSubmit);
   form.elements.cover_url.addEventListener('input', updatePreview);
+  document.querySelector('#cover-upload-button').addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', handleFile);
   form.elements.body.addEventListener('input', updateWordCount);
   preview.addEventListener('error', () => {
     preview.hidden = true;
