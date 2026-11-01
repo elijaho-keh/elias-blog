@@ -334,3 +334,9 @@ Key decisions, problems and how they were solved, phase by phase. Written as the
 **Verified**
 - All 8 seed posts have a summary. Publishing through `POST /api/posts` returned 201 in 1.3 seconds with a summary saved in the database (test post and test account deleted afterwards).
 - The post page shows the summary under the title, labelled "AI summary".
+
+### Bug found while testing on the live site
+
+- **Problem:** my first live test post had a body that was one 412-character "word" with no spaces. Nothing in the CSS allowed a word to break, so the post page became 4,586 px wide on a 373 px phone screen, and the home page 3,891 px, through the excerpt. The same would happen with a long pasted link.
+- **Fix:** one line on `body`: `overflow-wrap: anywhere`. A word only breaks when it can't fit on its own line, so normal text is unaffected. Both pages measured 373 px wide afterwards.
+- That post also got no AI summary. The text was gibberish, so the model's answer failed the "too short" check, and the post was saved without one, as designed. I deleted the test post afterwards.

@@ -77,6 +77,9 @@ body {
   font-size: 1.125rem;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  /* A word longer than the line (a long link, or a test like "aaaa…")
+     may break anywhere instead of making the page wider than the screen */
+  overflow-wrap: anywhere;
 }
 
 img,
