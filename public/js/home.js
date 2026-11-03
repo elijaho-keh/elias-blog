@@ -178,10 +178,13 @@ async function init() {
       ...post,
       searchText: normalize(`${post.title} ${post.body} ${post.summary || ''}`),
     }));
+    status.classList.remove('visually-hidden');
     status.textContent = state.posts.length === 0 ? 'No stories yet.' : '';
     render();
   } catch (error) {
     console.error(error);
+    list.replaceChildren();
+    status.classList.remove('visually-hidden');
     status.textContent = 'The stories could not be loaded. Please try again in a moment.';
     status.classList.add('status--error');
   }

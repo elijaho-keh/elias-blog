@@ -54,12 +54,16 @@
         </div>
       </div>
 
-      <p class="status" id="list-status" role="status">Loading stories…</p>
+      <p class="status visually-hidden" id="list-status" role="status">Loading stories…</p>
       <div class="empty-state" id="empty-state" hidden>
         <p class="empty-state__text" id="empty-text"></p>
         <button class="button" type="button" id="clear-filters">Show all stories</button>
       </div>
-      <ol class="story-list" id="story-list"></ol>
+      <ol class="story-list" id="story-list">
+        <!-- Placeholders while the stories load; replaced by the real list -->
+        <li class="entry entry--placeholder" aria-hidden="true"><div class="placeholder placeholder--image"></div><div><div class="placeholder placeholder--line"></div><div class="placeholder placeholder--title"></div><div class="placeholder placeholder--line"></div></div></li>
+        <li class="entry entry--placeholder" aria-hidden="true"><div class="placeholder placeholder--image"></div><div><div class="placeholder placeholder--line"></div><div class="placeholder placeholder--title"></div><div class="placeholder placeholder--line"></div></div></li>
+      </ol>
     </section>
   </main>
 

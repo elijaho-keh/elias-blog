@@ -54,6 +54,11 @@ export async function createPost(fields) {
   return data.post;
 }
 
+// Deletes a post (logged in only)
+export function deletePost(slug) {
+  return request(`/api/post?slug=${encodeURIComponent(slug)}`, { method: 'DELETE' });
+}
+
 // --- Comments ------------------------------------------------------------
 
 // The comments on one post, oldest first

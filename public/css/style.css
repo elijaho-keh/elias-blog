@@ -640,8 +640,33 @@ p {
   }
 }
 
+/* Grey stand-ins for stories while the list loads */
+.placeholder {
+  background: var(--rule);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+.placeholder--image {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  max-height: 60vh;
+}
+
+.placeholder--line {
+  width: 40%;
+  height: 0.8rem;
+  margin: 0.4rem 0 1rem;
+}
+
+.placeholder--title {
+  width: 85%;
+  height: 2.5rem;
+  margin-bottom: 1rem;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .kindred__placeholder {
+  .kindred__placeholder,
+  .placeholder {
     animation: none;
   }
 }
@@ -701,6 +726,19 @@ p {
   .kindred__placeholder {
     height: 18rem;
   }
+}
+
+.post__admin {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+  font-family: var(--font-ui);
+  font-size: 0.875rem;
+}
+
+.post__delete {
+  color: var(--accent);
 }
 
 /* Comments */
