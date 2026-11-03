@@ -27,7 +27,7 @@ function renderArtwork(body, artwork, keyword) {
     el('div', { class: 'kindred__card' }, [
       media,
       el('div', { class: 'kindred__text' }, [
-        el('p', { class: 'meta', text: `Matched on “${keyword}”` }),
+        el('p', { class: 'meta', text: `Matched on “${artwork.matched || keyword}”` }),
         el('h3', { class: 'kindred__title', text: artwork.title }),
         el('p', { class: 'kindred__artist', text: artwork.artist }),
         el('p', { class: 'kindred__date', text: artwork.date }),
