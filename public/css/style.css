@@ -446,14 +446,6 @@ p {
   color: var(--ink-soft);
 }
 
-.entry__no {
-  font-family: var(--font-display);
-  font-size: 1.25rem;
-  letter-spacing: 0;
-  text-transform: none;
-  color: var(--ink);
-}
-
 @media (min-width: 900px) {
   .masthead {
     grid-template-columns: auto 1fr;

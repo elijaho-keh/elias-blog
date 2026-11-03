@@ -65,7 +65,6 @@ function countByCategory() {
 
 function renderStory(post, index) {
   const isLead = index === 0;
-  const number = String(index + 1).padStart(2, '0');
 
   const image = el('img', {
     src: post.cover_url,
@@ -74,7 +73,6 @@ function renderStory(post, index) {
   });
 
   const meta = el('p', { class: 'meta' }, [
-    el('span', { class: 'entry__no', text: number }),
     el('span', { class: 'tag', text: post.category }),
     el('time', { datetime: post.published_at, text: formatDate(post.published_at) }),
   ]);
